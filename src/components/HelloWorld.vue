@@ -1,7 +1,26 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-
+import { ElNotification, NotificationHandle } from 'element-plus'
 defineProps<{ msg: string }>()
+
+let succNotify: NotificationHandle | null = null
+const succNotifyTime = 3000
+const onSuccessClick = () => {
+  if (succNotify)  {
+    // succNotify.close()
+    return
+  }
+  succNotify = ElNotification({
+      title: 'Success',
+      message: "Element Plus已集成",
+      type: 'success',
+      duration: succNotifyTime
+  })
+  setTimeout(()=>{
+    succNotify = null
+  }, succNotifyTime + 100)
+}
+
 
 const count = ref(0)
 </script>
@@ -26,11 +45,14 @@ const count = ref(0)
     <a href="https://v3.vuejs.org/" target="_blank">Vue 3 Docs</a>
   </p>
 
-  <button type="button" @click="count++">count is: {{ count }}</button>
+  <el-button @click="count++"> count is: {{ count }}</el-button>
   <p>
     Edit
     <code>components/HelloWorld.vue</code> to test hot module replacement.
   </p>
+
+  
+  <el-button :disabled="false" type="success" @click="onSuccessClick">Success</el-button>
 </template>
 
 <style scoped>

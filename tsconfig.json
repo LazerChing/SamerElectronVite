@@ -8,11 +8,14 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": "./",
+    "baseUrl": "./",  // 解析非相对模块的基础地址，默认是当前目录
+    "paths": { // 路径映射，相对于baseUrl
+      "@/*": ["src/*"]
+    },
     "strict": true,
-    "paths": {},
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["element-plus/global"]
   },
   "include": ["src"],
   "references": [

@@ -2,6 +2,28 @@
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import HelloWorld from './components/HelloWorld.vue'
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
+const onGotoHomeClick = () => {  
+  router.push({
+    name: 'home'
+  })
+}
+
+const onHandleMusicClick = () => {  
+  router.push({
+    name: 'handleMusic'
+  })
+}
+
+const onShowVehicleDataClick = () => { 
+  router.push({
+    name: 'vehicleData'
+  })
+}
+
+
 </script>
 
 <template>
@@ -10,11 +32,31 @@ import HelloWorld from './components/HelloWorld.vue'
     <img class="logo electron" src="./assets/electron.svg" >
     <img class="logo vue" src="./assets/vue.svg" >
   </div>
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
-  <div class="static-public">
+  <!-- <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" /> -->
+  
+  <!-- <div class="static-public">
     Place static files into the <code>/public</code> folder
     <img style="width:77px;" :src="'./node.png'" >
+  </div> -->
+
+  <div>
+    <!--使用 router-link 组件进行导航 -->
+    <!--通过传递 `to` 来指定链接 -->
+    <!--`<router-link>` 将呈现一个带有正确 `href` 属性的 `<a>` 标签-->
+    <!-- <router-link to="/"> Go to Home </router-link> |     -->
+    <el-button type="primary" bg text size="small" @click="onGotoHomeClick"> Go to Home </el-button>
+    <router-link to="/about"> Go to About </router-link> |
+    <router-link :to="{ name:'helloWorld', params: { msg: 'HelloWorld Msg'} }"> Go to HelloWorld </router-link>
+    <el-button type="primary" bg text size="small" @click="onHandleMusicClick"> HandleMusic </el-button>
+    <el-button type="primary" bg text size="small" @click="onShowVehicleDataClick"> ShowVehicleData </el-button>
+
   </div>
+  <!-- 路由出口 -->
+  <!-- 路由匹配到的组件将渲染在这里 -->
+  <router-view></router-view>  
+
+
+
 </template>
 
 <style>

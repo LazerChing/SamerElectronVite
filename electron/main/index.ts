@@ -13,8 +13,15 @@ process.env.DIST = join(__dirname, '../..')
 process.env.PUBLIC = app.isPackaged ? process.env.DIST : join(process.env.DIST, '../public')
 
 import { app, BrowserWindow, shell, ipcMain } from 'electron'
+import remoteMain from '@electron/remote/main'
 import { release } from 'os'
 import { join } from 'path'
+
+
+/**
+ * initialize the main-process side of the remote module
+ */
+remoteMain.initialize()
 
 // Disable GPU Acceleration for Windows 7
 if (release().startsWith('6.1')) app.disableHardwareAcceleration()
@@ -42,12 +49,14 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     icon: join(process.env.PUBLIC, 'favicon.ico'),
+    width: 1800,
+    height: 1000,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
       // Consider using contextBridge.exposeInMainWorld
       // Read more on https://www.electronjs.org/docs/latest/tutorial/context-isolation
-      nodeIntegration: true,
+      nodeIntegration: true,  // 允许渲染进程使用nodejs
       contextIsolation: false,
     },
   })
@@ -70,6 +79,10 @@ async function createWindow() {
     if (url.startsWith('https:')) shell.openExternal(url)
     return { action: 'deny' }
   })
+
+  // 引入@electron/remote后，需开启
+  remoteMain.enable(win.webContents)
+
 }
 
 app.whenReady().then(createWindow)

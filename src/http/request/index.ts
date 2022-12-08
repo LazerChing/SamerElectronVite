@@ -36,13 +36,13 @@ service.interceptors.request.use(
 service.interceptors.response.use(
 	response => {
         // 2xx 范围内的状态码都会触发该函数。
-		console.log(response);
+		// console.log(response);
 		const dataAxios = response.data
 		return dataAxios
 	},
 	error => {		
         // 超出 2xx 范围的状态码都会触发该函数。
-        console.error("response use ", error)
+        // console.error("response use ", error)
         return Promise.reject(error)
 	}
 )

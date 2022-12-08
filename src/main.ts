@@ -10,13 +10,33 @@ import router from './router'
 import axios from 'axios'
 const app = createApp(App)
 
-import { createPinia } from 'pinia'
-const store = createPinia()
+import { createPinia, PiniaPluginContext } from 'pinia'
+const pinia = createPinia()
+
+type Options = {
+	key?: string
+}
+const piniaPlugin = (options: Options) => {
+	return (context: PiniaPluginContext) => {
+		const { store } = context;
+
+		// 解决pinia在setup语法下中使用$reset()报错的问题
+		const initialState = JSON.parse(JSON.stringify(store.$state))
+		store.$reset = () => {
+			store.$state = JSON.parse(JSON.stringify(initialState));
+		}
+	}
+}
+
+//注册pinia 插件
+pinia.use(piniaPlugin({
+	key: "pinia"
+}))
 
 app
 .use(ElementPlus)
 .use(router)
-.use(store)
+.use(pinia)
 .mount('#app')
 .$nextTick(() => {
   postMessage({ payload: 'removeLoading' }, '*')

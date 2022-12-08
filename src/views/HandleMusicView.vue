@@ -61,10 +61,6 @@ const logHistory = ref("")
 
 </script>
 
-<script lang = 'ts'>
-
-</script>
-
 <template>
   <p>This is HandleMusicView</p>
   <div class="flex-main">
@@ -78,16 +74,16 @@ const logHistory = ref("")
   </div>
   <div class="flex-select">
     <el-radio-group v-model="operateType" @change="onSelectChange">
-      <el-radio v-for="(item, index) in OPERATE_TYPE" :key="index" :label="item.KEY"> {{item.VALUE}} </el-radio>
+      <el-radio v-for="(item, index) in OPERATE_TYPE" :key="index" :label="item.KEY"> {{ item.VALUE }} </el-radio>
     </el-radio-group>
   </div>
 
   <div class="flex-logarea">
-    <el-input class="textarea" v-model="logHistory" clearable readonly type="textarea"/>
+    <el-input class="textarea" v-model="logHistory" clearable readonly type="textarea" />
   </div>
 
   <div>
-      <FormatRename v-if="operateType == OPERATE_TYPE.FORMAT_RENAME.KEY" :dicPath="dicPath"></FormatRename>
+    <FormatRename v-if="operateType == OPERATE_TYPE.FORMAT_RENAME.KEY" :dicPath="dicPath"></FormatRename>
     <!-- <component :is="currSelectComp"></component> -->
   </div>
 
@@ -107,17 +103,20 @@ const logHistory = ref("")
     width: 900px
   }
 }
+
 .flex-select {
   display: flex;
   justify-content: space-around;
   margin-top: 20px;
 }
+
 .flex-logarea {
   display: flex;
   // width: 900px;
-  justify-content:center;
+  justify-content: center;
   margin-top: 20px;
-  .textarea{
+
+  .textarea {
     width: 900px
   }
 }

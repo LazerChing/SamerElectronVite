@@ -53,7 +53,7 @@ export default defineConfig({
         rewrite: (path) => {
           path = path.replace(/^\/bydApis/, '')
           return path
-        }
+        },
       }
     }    
   } : undefined,

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, getCurrentInstance, inject, reactive, computed, toRefs, toRef } from 'vue'
+import { ref, getCurrentInstance, inject, reactive, computed, toRefs, toRef, h, render, createApp, createVNode } from 'vue'
 import { Eleme } from '@element-plus/icons-vue'
-import { ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus'
+import { ElDialog, ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus'
 import axios from 'axios'
 
 import { formatTimestamp } from '../utils/TimeUtils'
 import { useBydInfoStore } from '@/store/bydInfo'
+import AmapContainer from '@/components/Map/AmapContainer.vue'
 const bydInfoStore = useBydInfoStore()
 const { carInfo, carData } = toRefs(bydInfoStore)
 
@@ -39,6 +40,8 @@ const carSoc = ref(0)
 type AutoRuleForm = {
   cookieStr: string,
 }
+
+// Samer TODO cookie不要明文上传
 const ruleForm = reactive<AutoRuleForm>({
   cookieStr: '',
 })
@@ -80,10 +83,15 @@ const onGetCarDataClick = async (formEl: FormInstance | undefined) => {
       isGetCarDataEnable.value = false
 
       const data = await bydInfoStore.getCarData();
-      console.log('onGetCarDataClick:', data);
+      console.log('carData:', data);
       if (data) {
         ElMessage.success(`车辆数据获取成功`)
         carSoc.value = bydInfoStore.carData?.soc || carSoc.value
+      }
+      const carLocation = await bydInfoStore.getCarLocation();
+      console.log('carLocation:', carLocation);
+      if (carLocation) {
+        ElMessage.success(`车辆位置获取成功`)
       }
       isGetCarDataEnable.value = true
     }
@@ -106,6 +114,52 @@ const onGetCarInfoClick = async (formEl: FormInstance | undefined) => {
     }
   })
 }
+
+const onLocationClick = () => {
+  if (bydInfoStore.carLocationData) {
+    locationDlgVisible.value = true
+    _alertMapDlg()
+  }
+}
+
+const _alertMapDlg = () => {
+  const container = document.createElement('div')
+  // 这里有个问题：ElDialog每弹出一次，遮罩(el-overlay)都会增加一个，不会自动remove掉
+  const dialogVnode = h(
+    ElDialog,
+    {
+      modelValue: locationDlgVisible.value,
+      alignCenter: true,
+      appendToBody: true,
+      title: '车辆位置',
+      width: '80%',
+      destroyOnClose: true,
+      onClosed: () => {
+        if (container) {
+          container.remove()
+          locationDlgVisible.value = false
+        }
+      }
+    },
+    {
+      // 不使用default插槽会报提醒
+      default: () => {
+        return [
+          h(
+            AmapContainer,
+            {
+              centerPos: bydInfoStore.locationPosArr,
+            }
+          )
+        ]
+      }
+    }
+  )
+  render(dialogVnode, container)
+  document.body.appendChild(container)
+}
+
+const locationDlgVisible = ref(false)
 
 const progressColors = [
   { color: '#f56c6c', percentage: 20 },
@@ -208,6 +262,16 @@ const progressState = computed(() => {
     <div class="car-data-zlc" v-if="carData">
       <span>总里程：{{ bydInfoStore.zlcText }}</span>
     </div>
+    <div class="car-data-location" v-if="carData">
+      <el-link :href="''" icon="Location" @click="onLocationClick">
+        <!-- <el-icon><Location /></el-icon> -->
+        <span>车辆位置经纬度：{{ bydInfoStore.longitude_latitude }}</span>
+      </el-link>
+    </div>
+
+    <!-- <el-dialog v-if="bydInfoStore.carLocationData" v-model="locationDlgVisible" title="车辆位置" append-to-body align-center width="70%" destroy-on-close>
+      <AmapContainer :center-pos="bydInfoStore.locationPosArr"></AmapContainer>
+    </el-dialog> -->
   </div>
 </template>
 
@@ -303,7 +367,7 @@ const progressState = computed(() => {
     font-size: 14px;
   }
 
-  .divider{
+  .divider {
     margin: 10px auto;
     width: 80%;
   }

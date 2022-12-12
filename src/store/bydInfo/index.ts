@@ -1,10 +1,12 @@
 // 定义store
-import { apiGetCarInfo, apiGetVehicleRealTimeResult, apiVehicleRealTimeRequest } from "@/http/apis/bydApis";
-import { RealTimeReqParams, CarData, CarInfo } from "@/types/BydTypes";
+import { apiGetCarInfo, apiGetVehicleRealTimeResult, apiVehicleRealTimeRequest, apiGetVehicleLocation } from "@/http/apis/bydApis";
+import { RealTimeReqParams, CarData, CarInfo, CarLocationData } from "@/types/BydTypes";
 import { awaitWrapper } from "@/utils/functions";
 import { ElMessage } from "element-plus";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+
+const MAP_RATIO = 0.000001
 
 //#region setup式API
 // export const useBydInfoStore = defineStore('bydInfo', () => {
@@ -26,19 +28,31 @@ export const useBydInfoStore = defineStore('bydInfo', {
 			cookie: '',
 			carInfo: null as CarInfo[] | null,
 			carData: null as CarData | null,
+			carLocationData: null as CarLocationData | null, // 经纬度需要乘以0.000001
 		}
 	},
 	getters: {
-		// 箭头函数，不可以使用this，需指定state，不用指定返回类型，可以自动推断
-		// xhText: (state) => {
-		// 	if (state.carData?.xh) return state.carData?.xh + 'km'
-		// 	return '暂无数据'
-		// },
-
 		// 非箭头函数，可以使用 this，但是需要注明返回类型
 		zlcText(): string {
 			return this.carData?.zlc ? `${this.carData?.zlc}km` : '暂无数据'
+		},
+
+		// 箭头函数，不可以使用this，需指定state，不用指定返回类型，可以自动推断
+		longitude_latitude: (state) => {
+			if (state.carLocationData) {
+				const longitude = Number((state.carLocationData.longitude * MAP_RATIO).toFixed(6))
+				const latitude = Number((state.carLocationData.latitude * MAP_RATIO).toFixed(6))
+				return `${longitude},${latitude}`
+			}
+			return '暂无位置信息'
+		},
+		locationPosArr: (state) => {
+			if (state.carLocationData) {
+				return [Number((state.carLocationData.longitude * MAP_RATIO).toFixed(6)), Number((state.carLocationData.latitude * MAP_RATIO).toFixed(6))]
+			}
+			return [0, 0]
 		}
+
 	},
 	actions: {
 		// 获取车辆信息
@@ -77,6 +91,22 @@ export const useBydInfoStore = defineStore('bydInfo', {
 				console.warn(error);
 
 				return null;
+			}
+		},
+
+		async getCarLocation() {
+			if (!this.carInfo || this.carInfo[0] == null) {
+				ElMessage.error('请先获取车辆信息')
+				return null
+			}
+			const [err, res] = await awaitWrapper(apiGetVehicleLocation(this.carInfo[0].vin))
+			if (err) {
+				ElMessage.error('获取车辆位置数据失败:' + err?.rebackDesc)
+				console.warn(err);
+				return null
+			} else {
+				res && (this.carLocationData = res)
+				return res;
 			}
 		},
 

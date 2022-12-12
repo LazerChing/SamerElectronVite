@@ -83,3 +83,9 @@ export interface RealTimeReqParams {
 	// 能源类型
 	energyType: number
 }
+
+// 车辆位置信息
+export interface CarLocationData {
+	longitude: number;
+	latitude: number;
+}

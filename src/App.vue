@@ -27,11 +27,11 @@ const onShowVehicleDataClick = () => {
 </script>
 
 <template>
-  <div class="logo-box">
+  <!-- <div class="logo-box">
     <img class="logo vite" src="./assets/vite.svg" >
     <img class="logo electron" src="./assets/electron.svg" >
     <img class="logo vue" src="./assets/vue.svg" >
-  </div>
+  </div> -->
   <!-- <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" /> -->
   
   <!-- <div class="static-public">

@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import App from './App.vue'
 // import './samples/node-api'
@@ -32,6 +33,11 @@ const piniaPlugin = (options: Options) => {
 pinia.use(piniaPlugin({
 	key: "pinia"
 }))
+
+// 全局注册所有ElementPlus icon图标
+Object.entries(ElementPlusIconsVue).forEach(([key, component]) => {
+	app.component(key, component)
+})
 
 app
 .use(ElementPlus)

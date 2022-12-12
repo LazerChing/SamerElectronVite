@@ -1,5 +1,5 @@
 import axios from "../request/";
-import { CarData, RealTimeReqParams } from '@/types/BydTypes';
+import { CarData, CarLocationData, RealTimeReqParams } from '@/types/BydTypes';
 
 let requestedSerials: number[] = [];
 
@@ -31,7 +31,11 @@ function getRand32Str() {
 	}
 	return `${randStr(8)}-${randStr(4)}-${randStr(4)}-${randStr(4)}-${randStr(12)}`
 }
-
+/**
+ * 获取车辆基本信息
+ * @param cookie 
+ * @returns 
+ */
 export function apiGetCarInfo(cookie?: string): Promise<any> {
 	const random = getRand32Str()
 	const timeStamp = new Date().getTime()
@@ -58,7 +62,11 @@ export function apiGetCarInfo(cookie?: string): Promise<any> {
 	})
 }
 
-
+/**
+ * 请求车辆实时数据
+ * @param apiParams 
+ * @returns 
+ */
 export function apiVehicleRealTimeRequest(apiParams: RealTimeReqParams) {
 	const { carId, autoType, energyType } = apiParams
 	const requestSerial = getRequestSerial()
@@ -83,6 +91,11 @@ export function apiVehicleRealTimeRequest(apiParams: RealTimeReqParams) {
 	})
 }
 
+/**
+ * 请求车辆实时数据结果
+ * @param apiParams 
+ * @returns 
+ */
 export function apiGetVehicleRealTimeResult(apiParams: RealTimeReqParams) {
 	const { carId, autoType, energyType } = apiParams
 	const requestSerial = getRequestSerial()
@@ -94,6 +107,38 @@ export function apiGetVehicleRealTimeResult(apiParams: RealTimeReqParams) {
 			url: '/wechat/Vehicle/vehicleRealTimeResult',
 			method: 'post',
 			data: JSON.stringify({ "caridentifier": carId, "autoType": autoType, "energyType": energyType, "requestSerial": requestSerial, "timeStamp": timeStamp, "random": random }),
+		})
+			.then((res: any) => {
+				if (res?.rebackResult == 0) {
+					resolve(res.data)
+				} else {
+					reject(res)
+				}
+			})
+			.catch((err) => {
+				reject(err)
+			})
+	})
+}
+
+/**
+ * 获取车辆位置数据
+ * @param carId 车架号
+ * @returns 
+ */
+export function apiGetVehicleLocation(carId: string) {
+	const random = getRand32Str()
+	const timeStamp = new Date().getTime()
+	return new Promise<CarLocationData>((resolve, reject) => {
+		axios({
+			url: '/wechat/location',
+			method: 'get',
+			params: {
+				"caridentifier": carId,
+				timeStamp,
+				random,
+				"netWorkingMode": 'wifi'
+			},
 		})
 			.then((res: any) => {
 				if (res?.rebackResult == 0) {

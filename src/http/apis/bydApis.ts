@@ -1,4 +1,4 @@
-import axios from "../request/";
+import axios from "../request/byd";
 import { CarData, CarLocationData, RealTimeReqParams } from '@/types/BydTypes';
 
 let requestedSerials: number[] = [];

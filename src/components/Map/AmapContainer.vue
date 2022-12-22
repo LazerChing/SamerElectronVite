@@ -73,7 +73,31 @@ const initMap = () => {
 			map.addControl(new AMap.MapType());
 
 			// 在图面添加定位控件，用来获取和展示用户主机所在的经纬度位置
-			map.addControl(new AMap.Geolocation());
+			// map.addControl(new AMap.Geolocation());
+
+
+			let geolocation = new AMap.Geolocation({
+				// 是否使用高精度定位，默认：true
+				enableHighAccuracy: true,
+				// 设置定位超时时间，默认：无穷大
+				timeout: 10000,
+				// 定位按钮的停靠位置的偏移量
+				offset: [10, 20],
+				// 定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+				zoomToAccuracy: true,
+				// 定位按钮的排放位置,  RB表示右下
+				position: 'RB'
+			})
+
+			geolocation.getCurrentPosition((status: any, result: any) => {
+				if (status == 'complete') {
+					console.log('complete', result);
+				} else {
+					console.log('getCurrentPosition err', result);
+				}
+			});
+
+			map.addControl(geolocation)
 		});
 
 		const infoWindow = new AMap.InfoWindow({

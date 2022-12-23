@@ -43,7 +43,7 @@ type AutoRuleForm = {
 
 // Samer TODO cookie不要明文上传
 const ruleForm = reactive<AutoRuleForm>({
-  cookieStr: '',
+  cookieStr: import.meta.env.VITE_MY_BYD_COOKIE || '',
 })
 
 const validateCookie = (rule: any, value: string, callback: Function) => {

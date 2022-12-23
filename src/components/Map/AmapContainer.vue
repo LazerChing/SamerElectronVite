@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<AmapProps>(), {
 
 const initMap = () => {
 	AMapLoader.load({
-		key: '',  //设置您的key
+		key: import.meta.env.VITE_AMAP_KEY || '',  //设置您的key
 		version: "2.0",
 		plugins: ['AMap.ToolBar', 'AMap.Driving'],
 		AMapUI: {

@@ -31,6 +31,7 @@ function getRand32Str() {
 	}
 	return `${randStr(8)}-${randStr(4)}-${randStr(4)}-${randStr(4)}-${randStr(12)}`
 }
+
 /**
  * 获取车辆基本信息
  * @param cookie 

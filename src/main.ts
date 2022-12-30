@@ -54,5 +54,5 @@ app.config.globalProperties.$http = axios
 // 方式2，provide 出去，后面要使用的地方通过inject接收
 app.provide('$axios', axios)
 
-console.log("Env", import.meta.env)
+console.log("import.meta.env", import.meta.env)
 console.log("VITE_ENV", import.meta.env.VITE_ENV)

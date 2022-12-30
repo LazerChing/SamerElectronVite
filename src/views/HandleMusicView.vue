@@ -52,8 +52,6 @@ const onSelectDicClick = () => {
 }
 
 const onSelectChange = (value: any) => {
-  // console.log(value);
-
   for (const key in OPERATE_TYPE.value) {
     const item = OPERATE_TYPE.value[key];
     if (item.KEY == value && item.COMP) {
@@ -85,7 +83,7 @@ const _addLog = (logInfo: any) => {
   if (logArrs.length >= MAX_LOG_COUNT) {
     logArrs.shift()
   }
-  const newLogInfo = `[${now}] ${logInfo} \n`
+  const newLogInfo = `[${now}] ${logInfo}\n`
   logArrs.push(newLogInfo)
 }
 
@@ -110,8 +108,8 @@ const onClearClick = () => {
   </div>
 
   <div class="flex-logarea">
-    <el-button class="button" @click="onClearClick"> 清除日志 </el-button>
-    <el-input class="textarea" v-model="logHistory" type="textarea" :autosize="{ minRows: 2, maxRows: 10 }" />
+    <el-button class="button" @click="onClearClick" :disabled="!logHistory"> 清除日志 </el-button>
+    <el-input class="textarea" v-model="logHistory" readonly type="textarea" :autosize="{ minRows: 2, maxRows: 10 }" />
   </div>
 
   <div>

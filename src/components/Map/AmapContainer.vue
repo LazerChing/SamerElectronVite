@@ -5,7 +5,7 @@
 <script lang="ts" setup>
 import AMapLoader from '@amap/amap-jsapi-loader';
 import { shallowRef } from '@vue/reactivity'
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 let map = shallowRef<any>(null)
 
 interface AmapProps {
@@ -13,15 +13,27 @@ interface AmapProps {
 	positionArr?: Array<Array<number>>
 }
 
+
 const props = withDefaults(defineProps<AmapProps>(), {
 	centerPos: () => [0, 0]
 })
 
+const centerAddr = ref(props.centerPos)
+defineExpose({
+	centerAddr
+})
+
+const emit = defineEmits(['updateAddr'])
+
 const initMap = () => {
+	// @ts-ignore
+	window._AMapSecurityConfig = {
+		securityJsCode: import.meta.env.VITE_AMAP_SECURE_KEY || '',
+	}
 	AMapLoader.load({
 		key: import.meta.env.VITE_AMAP_KEY || '',  //设置您的key
 		version: "2.0",
-		plugins: ['AMap.ToolBar', 'AMap.Driving'],
+		plugins: ['AMap.ToolBar', 'AMap.Geocoder', 'AMap.Driving'],
 		AMapUI: {
 			version: "1.1",
 			plugins: [],
@@ -62,6 +74,7 @@ const initMap = () => {
 			'AMap.Scale',
 			'AMap.MapType',
 			'AMap.Geolocation',
+			'AMap.Geocoder',
 		], () => {
 			// 在图面添加工具条控件，工具条控件集成了缩放、平移、定位等功能按钮在内的组合控件
 			// map.addControl(new AMap.ToolBar());
@@ -74,7 +87,6 @@ const initMap = () => {
 
 			// 在图面添加定位控件，用来获取和展示用户主机所在的经纬度位置
 			// map.addControl(new AMap.Geolocation());
-
 
 			let geolocation = new AMap.Geolocation({
 				// 是否使用高精度定位，默认：true
@@ -89,7 +101,7 @@ const initMap = () => {
 				position: 'RB'
 			})
 
-			geolocation.getCurrentPosition((status: any, result: any) => {
+			geolocation.getCurrentPosition((status: string, result: any) => {
 				if (status == 'complete') {
 					console.log('complete', result);
 				} else {
@@ -98,28 +110,48 @@ const initMap = () => {
 			});
 
 			map.addControl(geolocation)
+
+			// 根据经纬度查询地址
+			let geocoder = new AMap.Geocoder({
+				radius: 1000, //以已知坐标为中心点，radius为半径，返回范围内兴趣点和道路信息
+				extensions: "all" //返回地址描述以及附近兴趣点和道路信息，默认“base”
+			});
+			//逆地理编码
+			const strMapArr = props.centerPos.map((value) => {
+				return value.toString()
+			})
+			let lnglat = new AMap.LngLat(props.centerPos[0], props.centerPos[1])
+			geocoder.getAddress(lnglat, (status: string, result: any) => {
+				let address
+				if (status === 'complete' && result.regeocode) {
+					address = result.regeocode.formattedAddress;
+					console.log(address);
+					centerAddr.value = address
+					emit('updateAddr', address)
+				} else {
+					console.error('根据经纬度查询地址失败', result)
+				}
+				const infoWindow = new AMap.InfoWindow({
+					anchor: 'top-center',
+					content: address || '车辆位置',
+				});
+				infoWindow.open(map, props.centerPos);
+			});
 		});
 
-		const infoWindow = new AMap.InfoWindow({
-			anchor: 'top-center',
-			content: '车辆位置',
-		});
-
-		infoWindow.open(map, props.centerPos);
 	}).catch(e => {
 		console.error(e);
 	})
 }
 
 onMounted(() => {
-	// initMap()
 	initMap()
 })
 
 </script>
 
 
-<style  scoped lang="less">
+<style scoped lang="less">
 #container {
 	padding: 0px;
 	margin: 0px;

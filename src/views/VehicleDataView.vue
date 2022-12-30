@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, getCurrentInstance, inject, reactive, computed, toRefs, toRef, h, render, createApp, createVNode } from 'vue'
+import { ref, getCurrentInstance, inject, reactive, computed, toRefs, toRef, h, render, createApp, createVNode, watch, VNode } from 'vue'
 import { Eleme } from '@element-plus/icons-vue'
 import { ElDialog, ElMessage, ElNotification, FormInstance, FormRules } from 'element-plus'
 import axios from 'axios'
@@ -8,6 +8,7 @@ import { formatTimestamp } from '../utils/TimeUtils'
 import { useBydInfoStore } from '@/store/bydInfo'
 import AmapContainer from '@/components/Map/AmapContainer.vue'
 const bydInfoStore = useBydInfoStore()
+// 转为响应式对象，便于原属性值修改后能同步到界面显示
 const { carInfo, carData } = toRefs(bydInfoStore)
 
 //#region 全局属性的使用
@@ -34,14 +35,16 @@ const { carInfo, carData } = toRefs(bydInfoStore)
 const ruleFormRef = ref<FormInstance>()
 const isGetCarInfoEnable = ref(true)
 const isGetCarDataEnable = ref(false)
-
+const AmapVNode = ref<VNode | null>(null)
+const carAddr = ref('')
 const carSoc = ref(0)
+const locationDlgEnabled = ref(false) // 用来控制display属性是否为none（是否创建了并挂载到节点树）
+const locationDlgVisible = ref(false) // 用来控制visibility属性是否为visible（是否可见）
 
 type AutoRuleForm = {
   cookieStr: string,
 }
 
-// Samer TODO cookie不要明文上传
 const ruleForm = reactive<AutoRuleForm>({
   cookieStr: import.meta.env.VITE_MY_BYD_COOKIE || '',
 })
@@ -92,6 +95,7 @@ const onGetCarDataClick = async (formEl: FormInstance | undefined) => {
       console.log('carLocation:', carLocation);
       if (carLocation) {
         ElMessage.success(`车辆位置获取成功`)
+        locationDlgEnabled.value = true
       }
       isGetCarDataEnable.value = true
     }
@@ -115,51 +119,60 @@ const onGetCarInfoClick = async (formEl: FormInstance | undefined) => {
   })
 }
 
+const createAmapVNode = () => {
+  AmapVNode.value = h(
+    AmapContainer,
+    {
+      centerPos: bydInfoStore.locationPosArr,
+    }
+  )
+  return AmapVNode.value
+}
+
 const onLocationClick = () => {
   if (bydInfoStore.carLocationData) {
+    locationDlgEnabled.value = true
     locationDlgVisible.value = true
-    _alertMapDlg()
+    // _alertMapDlg()
   }
 }
 
-const _alertMapDlg = () => {
-  const container = document.createElement('div')
-  // 这里有个问题：ElDialog每弹出一次，遮罩(el-overlay)都会增加一个，不会自动remove掉
-  const dialogVnode = h(
-    ElDialog,
-    {
-      modelValue: locationDlgVisible.value,
-      alignCenter: true,
-      appendToBody: true,
-      title: '车辆位置',
-      width: '80%',
-      destroyOnClose: true,
-      onClosed: () => {
-        if (container) {
-          container.remove()
-          locationDlgVisible.value = false
-        }
-      }
-    },
-    {
-      // 不使用default插槽会报提醒
-      default: () => {
-        return [
-          h(
-            AmapContainer,
-            {
-              centerPos: bydInfoStore.locationPosArr,
-            }
-          )
-        ]
-      }
-    }
-  )
-  render(dialogVnode, container)
-  document.body.appendChild(container)
-}
-
-const locationDlgVisible = ref(false)
+// const _alertMapDlg = () => {
+//   const container = document.createElement('div')
+//   // 这里有个问题：ElDialog每弹出一次，遮罩(el-overlay)都会增加一个，不会自动remove掉
+//   const dialogVnode = h(
+//     ElDialog,
+//     {
+//       modelValue: locationDlgEnabled.value,
+//       alignCenter: true,
+//       appendToBody: true,
+//       title: '车辆位置',
+//       width: '80%',
+//       destroyOnClose: true,
+//       onClosed: () => {
+//         if (container) {
+//           container.remove()
+//           locationDlgEnabled.value = false
+//         }
+//       }
+//     },
+//     {
+//       // 不使用default插槽会报提醒
+//       default: () => {
+//         return [
+//           h(
+//             AmapContainer,
+//             {
+//               centerPos: bydInfoStore.locationPosArr,
+//             }
+//           )
+//         ]
+//       }
+//     }
+//   )
+//   render(dialogVnode, container)
+//   document.body.appendChild(container)
+// }
 
 const progressColors = [
   { color: '#f56c6c', percentage: 20 },
@@ -181,6 +194,20 @@ const progressState = computed(() => {
   }
   return ''
 })
+
+const onUpdateCarAddr = (address: string) => {
+  carAddr.value = address
+}
+
+const getXhToolTip = () => {
+  let estimatedXh = bydInfoStore.estimatedXhText()
+  if (!estimatedXh) {
+    return '暂无预估续航数据'
+  }
+  let actualXh = bydInfoStore.actualXhText();
+  let discount = Number(parseInt(estimatedXh) / parseInt(actualXh) * 100).toFixed(1)
+  return `根据最近50km能耗预估实际可用续航为：${estimatedXh}，打折率${discount}%`
+}
 
 </script>
 
@@ -229,9 +256,11 @@ const progressState = computed(() => {
       </el-progress>
     </div>
     <div class="car-data-xh">
-      <el-progress :percentage="(carData && carSoc || 100)" :status="progressState" :text-inside="true"
-        :stroke-width="20" :format="bydInfoStore.xhText">
-      </el-progress>
+      <el-tooltip :content="getXhToolTip()" placement="top-end" effect="dark">
+        <el-progress :percentage="(carData && carSoc || 100)" :status="progressState" :text-inside="true"
+          :stroke-width="20" :format="bydInfoStore.actualXhText">
+        </el-progress>
+      </el-tooltip>
     </div>
     <div class="car-data-nh" v-if="carData">
       <div>
@@ -241,37 +270,42 @@ const progressState = computed(() => {
         累计能耗：{{ (carData?.ljnh) }}
       </div>
     </div>
+    <div v-if="carData" style="position:relative; margin:auto">
+      <el-image class="car-img" :src="bydInfoStore.carImgScr" fit="fill" />
+    </div>
     <div class="car-data-ty" v-if="carData">
       <div class="car-data-ty-top">
         <div>
-          左前胎压：{{ (carData?.ltylzzq) + 'kPa' }}
+          {{ (carData?.ltylzzq) + 'kPa' }}
         </div>
         <div>
-          右前胎压：{{ (carData?.ltylzyq) + 'kPa' }}
+          {{ (carData?.ltylzyq) + 'kPa' }}
         </div>
       </div>
       <div class="car-data-ty-down">
         <div>
-          左后胎压：{{ (carData?.ltylzzh) + 'kPa' }}
+          {{ (carData?.ltylzzh) + 'kPa' }}
         </div>
         <div>
-          右后胎压：{{ (carData?.ltylzyh) + 'kPa' }}
+          {{ (carData?.ltylzyh) + 'kPa' }}
         </div>
       </div>
     </div>
     <div class="car-data-zlc" v-if="carData">
       <span>总里程：{{ bydInfoStore.zlcText }}</span>
     </div>
-    <div class="car-data-location" v-if="carData">
-      <el-link :href="''" icon="Location" @click="onLocationClick">
-        <!-- <el-icon><Location /></el-icon> -->
-        <span>车辆位置经纬度：{{ bydInfoStore.longitude_latitude }}</span>
-      </el-link>
+    <div class="car-data-location" v-if="bydInfoStore.carLocationData">
+      <div v-if="carAddr != ''">
+        <el-link :href="''" icon="Location" @click="onLocationClick">
+          <span> {{ `车辆位置：${carAddr}` }}</span>
+        </el-link>
+      </div>
+      <div :style="{ visibility: locationDlgVisible ? 'visible' : 'hidden' }">
+        <el-dialog v-model="locationDlgEnabled" title="车辆位置" align-center width="70%" :lock-scroll="false">
+          <AmapContainer :center-pos="bydInfoStore.locationPosArr" @update-addr="onUpdateCarAddr" />
+        </el-dialog>
+      </div>
     </div>
-
-    <!-- <el-dialog v-if="bydInfoStore.carLocationData" v-model="locationDlgVisible" title="车辆位置" append-to-body align-center width="70%" destroy-on-close>
-      <AmapContainer :center-pos="bydInfoStore.locationPosArr"></AmapContainer>
-    </el-dialog> -->
   </div>
 </template>
 
@@ -306,6 +340,15 @@ const progressState = computed(() => {
   &-item {
     margin-bottom: 4px;
   }
+}
+
+.car-img {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -37%);
+  width: 447px;
+  height: 447px;
+  z-index: -1;
 }
 
 .car-data {
@@ -346,12 +389,24 @@ const progressState = computed(() => {
       display: -webkit-flex;
       display: flex;
       flex-flow: row, nowrap;
-      justify-content: space-evenly;
-      margin-bottom: 2px;
+      justify-content: center;
+      margin-bottom: 15px;
+
+      >div {
+        flex-basis: 128px
+      }
+    }
+
+    &-top {
+      margin-bottom: 66px;
     }
   }
 
   &-zlc {
+    margin-top: 5px;
+  }
+
+  &-location {
     margin-top: 5px;
   }
 

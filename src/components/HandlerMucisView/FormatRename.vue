@@ -13,24 +13,21 @@ const originFormat = ref("")
 const aimFormat = ref("")
 const modifyBtnDisable = ref(false)
 
-const _checkInput = () => {
-  if (!props.dicPath || !originFormat.value || !aimFormat.value) {
-    return false
-  }
-  return true
-}
-
 // 是否启用提示
-const enableBtnToolTip = computed(() => {
-  return _checkInput()
+const disableBtnToolTip = computed(() => {
+  return checkParamsFulfill()[0]
 })
 
+// 检测参数是否正确
+const checkParamsFulfill = (): [boolean, string] => {
+  if (!props.dicPath) { return [false, '请先指定目录'] }
+  if (!originFormat.value) { return [false, '请指定原格式名'] }
+  if (!aimFormat.value) { return [false, '请指定目标格式名'] }
+  return [true, '']
+}
 
 const toolTipContent = computed(() => {
-  if (!props.dicPath) { return '请先指定目录' }
-  if (!originFormat.value) { return '请指定原格式名' }
-  if (!aimFormat.value) { return '请指定目标格式名' }
-  return ''
+  return checkParamsFulfill()[1]
 })
 
 const emitLogInfo = (logInfo: any) => {
@@ -39,7 +36,9 @@ const emitLogInfo = (logInfo: any) => {
 
 const onModifyClick = () => {
   // modifyBtnDisable.value = true
-  if (!_checkInput()) { emitLogInfo('请检查输入'); return }
+  const result = checkParamsFulfill()
+  if (!result[0]) { emitLogInfo(result[1]); return }
+
   let files = fs.readdirSync(props.dicPath)
   let handledFiles = 0;
   files.forEach(file => {
@@ -71,7 +70,7 @@ const onModifyClick = () => {
     <div class="item">
       想把格式名更改为：<el-input class="input" v-model="aimFormat" placeholder="如flac" />
     </div>
-    <el-tooltip :content='toolTipContent' placement="bottom" :disabled="enableBtnToolTip">
+    <el-tooltip :content='toolTipContent' placement="bottom" :disabled="disableBtnToolTip">
       <el-button class="button item" :disabled="modifyBtnDisable" type="primary" @click="onModifyClick">
         开始修改</el-button>
     </el-tooltip>

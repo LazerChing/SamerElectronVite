@@ -4,7 +4,6 @@ import { RealTimeReqParams, CarData, CarInfo, CarLocationData } from "@/types/By
 import { awaitWrapper } from "@/utils/functions";
 import { ElMessage } from "element-plus";
 import { defineStore } from "pinia";
-import { ref } from "vue";
 
 const MAP_RATIO = 0.000001
 
@@ -29,6 +28,7 @@ export const useBydInfoStore = defineStore('bydInfo', {
 			carInfo: null as CarInfo[] | null,
 			carData: null as CarData | null,
 			carLocationData: null as CarLocationData | null, // 经纬度需要乘以0.000001
+			carImgScr: 'https://bydcloud.byd.com/wechat/static/images/car1.png'
 		}
 	},
 	getters: {
@@ -110,10 +110,39 @@ export const useBydInfoStore = defineStore('bydInfo', {
 			}
 		},
 
-		xhText() {
-			if (this.carData?.xh) return this.carData?.xh + 'km'
-			return '暂无数据'
+		// 预估续航
+		estimatedXhText() {
+			if (this.carInfo && this.carInfo[0] && this.carData) {
+				// 判断车型
+				const carInfo = this.carInfo[0];
+				if (carInfo.autoStyleName === "尊贵型Y" && carInfo.autoType === "秦PLUS EV") {
+					// 电池容量
+					const batteryCapacity = 57
+					// 剩余电池容量
+					const leftCapacity = Number(this.carData.soc * batteryCapacity * 0.01)
+					const estimatedXh = Math.round(leftCapacity / Number(this.carData.nh) * 100)
+					return `${estimatedXh}km`
+				}
+			}
+			return ''
 		},
+
+		// 表显续航
+		actualXhText() {
+			if (this.carData?.xh) return this.carData?.xh + 'km'
+			return ''
+		},
+
+		xhText() {
+			const actualXh = this.actualXhText();
+			if (actualXh) {
+				const estimatedXh = this.estimatedXhText();
+				if (estimatedXh) {
+					return `${actualXh}(预估可用：${estimatedXh})`
+				}
+			}
+			return "暂无数据"
+		}
 	}
 });
 //#endregion

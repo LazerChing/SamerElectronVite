@@ -4,13 +4,13 @@ import AboutView from '../views/AboutView.vue'
 import HandleMusicView from '../views/HandleMusicView.vue'
 import VehicleDataView from '../views/VehicleDataView.vue'
 import HelloWorld from "../components/HelloWorld.vue";
-import App from '../App.vue'
 const routes  = [
 	{
 		path: '/',
+		redirect: '/vehicleData',
 		name:"home",
-		component: HelloWorld,
-		props: { msg: 'Home'}
+		// component: HelloWorld,
+		// props: { msg: 'Home'}
 	},
 	{
 		path: '/about',

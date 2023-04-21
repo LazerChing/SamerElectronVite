@@ -300,7 +300,12 @@ const getXhToolTip = () => {
           <span> {{ `车辆位置：${carAddr}` }}</span>
         </el-link>
       </div>
-      <div :style="{ visibility: locationDlgVisible ? 'visible' : 'hidden' }">
+      <!-- 
+        这里不能用 display: none 来处理隐藏：
+        因为 none 的时候节点不会渲染（但是会创建节点），地图组件需要依赖节点树，会报错
+        所以使用 visibility: hidden来处理隐藏效果
+       -->
+      <div :style="{ visibility: locationDlgVisible ? 'visible' : 'hidden' }">  
         <el-dialog v-model="locationDlgEnabled" title="车辆位置" align-center width="70%" :lock-scroll="false">
           <AmapContainer :center-pos="bydInfoStore.locationPosArr" @update-addr="onUpdateCarAddr" />
         </el-dialog>

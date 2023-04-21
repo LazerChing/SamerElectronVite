@@ -65,13 +65,15 @@ const onModifyClick = () => {
 <template>
   <div class="renameFomat">
     <div class="item">
-      需要修改的格式：<el-input class="input" v-model="originFormat" placeholder="如mp3" />
+      <p>需要修改的格式：</p>
+      <el-input class="input" v-model="originFormat" placeholder="如mp3" />
     </div>
     <div class="item">
-      想把格式名更改为：<el-input class="input" v-model="aimFormat" placeholder="如flac" />
+      <p>想把格式名更改为：</p>
+      <el-input class="input" v-model="aimFormat" placeholder="如flac" />
     </div>
     <el-tooltip :content='toolTipContent' placement="bottom" :disabled="disableBtnToolTip">
-      <el-button class="button item" :disabled="modifyBtnDisable" type="primary" @click="onModifyClick">
+      <el-button class="button" :disabled="modifyBtnDisable" type="primary" @click="onModifyClick">
         开始修改</el-button>
     </el-tooltip>
   </div>
@@ -89,8 +91,16 @@ const onModifyClick = () => {
   margin-top: 30px;
 
   .item {
+    display: inline-flex;
     margin-bottom: 10px;
-
+    flex-flow: row nowrap;
+    align-items: center;
+    height: 2em;
+    >p{
+      display: flex;
+      width: 9em;
+      justify-content: flex-end;
+    }
     .input {
       width: 200px;
     }
